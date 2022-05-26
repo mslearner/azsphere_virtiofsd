@@ -574,7 +574,7 @@ struct Opt {
     modcaps: Option<String>,
 
     /// Log level (error, warn, info, debug, trace, off)
-    #[structopt(long = "log-level", default_value = "info")]
+    #[structopt(long = "log-level", default_value = "trace")]
     log_level: LevelFilter,
 
     /// Log to syslog [default: stderr]
