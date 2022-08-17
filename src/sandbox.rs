@@ -281,6 +281,7 @@ impl Sandbox {
 
     /// Sets 1-to-1 mappings for the current uid and gid.
     fn setup_id_mappings(&self, uid: u32, gid: u32) -> Result<(), Error> {
+        println!("---Setting up mappings uid={} gid={}----", uid, gid);
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
         fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
 
