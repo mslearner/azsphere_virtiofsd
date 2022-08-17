@@ -292,12 +292,12 @@ impl Sandbox {
         let gid_mapping = format!("{} {} 1\n", gid, gid);
         fs::write("/proc/self/gid_map", gid_mapping).map_err(Error::WriteGidMap)?;
 
-        println!(
-            "---Setting up aditional mappings from (namespace) uid={} to host (uid) gid={}----",
-            897, 1001
-        );
-        let uid_mapping = format!("{} {} 1\n", 897, 1001);
-        fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
+        // println!(
+        //     "---Setting up aditional mappings from (namespace) uid={} to host (uid) gid={}----",
+        //     897, 1001
+        // );
+        // let uid_mapping = format!("{} {} 1\n", 897, 1001);
+        // fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
         Ok(())
     }
 
