@@ -287,10 +287,10 @@ impl Sandbox {
 
         // Set up 1-to-1 mappings for our uid and gid.
         let uid_mapping = format!("{} {} 1\n", uid, uid);
-        fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
+        //fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
 
         let gid_mapping = format!("{} {} 1\n", gid, gid);
-        fs::write("/proc/self/gid_map", gid_mapping).map_err(Error::WriteGidMap)?;
+        //fs::write("/proc/self/gid_map", gid_mapping).map_err(Error::WriteGidMap)?;
 
         // println!(
         //     "---Setting up aditional mappings from (namespace) uid={} to host (uid) gid={}----",
