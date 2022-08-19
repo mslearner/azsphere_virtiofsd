@@ -301,10 +301,20 @@ impl Sandbox {
         // Set up 1-to-1 mappings for our uid and gid.
         let uid_mapping_format = format!("/proc/{}/uid_map\n", pid);
         let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
-        fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
 
         let gid_mapping_format = format!("/proc/{}/gid_map\n", pid);
         let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+        println!(
+            "uid_mapping_format={},uid_mapping={}",
+            uid_mapping_format, uid_mapping
+        );
+        println!(
+            "gid_mapping_format={},gid_mapping={}",
+            gid_mapping_format, gid_mapping
+        );
+
+        fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
+
         fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
         Ok(())
     }
