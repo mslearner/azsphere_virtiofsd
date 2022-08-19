@@ -345,8 +345,8 @@ impl Sandbox {
             Ok(())
         } else {
             // This is the parent.
-            self.setup_id_mappings(uid, gid)?;
             util::wait_for_child(child); // This never returns.
+            self.setup_id_mappings(uid, gid)?;
         }
     }
 
