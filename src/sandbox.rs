@@ -336,6 +336,14 @@ impl Sandbox {
             Ok(())
         } else {
             // This is the parent.
+            println!("The pid of the child is {}", child);
+            use std::process::Command;
+            let output = Command::new("/bin/cat")
+                .arg("/proc/self/status")
+                .output()
+                .expect("failed to execute process");
+            println!("status: {}", output.status);
+            println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
             util::wait_for_child(child); // This never returns.
         }
     }
