@@ -293,6 +293,22 @@ impl Sandbox {
         Ok(())
     }
 
+    /// Sets 1-to-1 mappings for the current uid and gid.
+    fn setup_id_mappings_external(&self, _uid: u32, _gid: u32, pid: i32) -> Result<(), Error> {
+        // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
+        // fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
+        println!("not setting setgroups right now..fix it later");
+        // Set up 1-to-1 mappings for our uid and gid.
+        let uid_mapping_format = format!("/proc/{}/uid_map 1\n", pid);
+        let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+        fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
+
+        let gid_mapping_format = format!("/proc/{}/gid_map 1\n", pid);
+        let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+        fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
+        Ok(())
+    }
+
     pub fn enter_namespace(&mut self) -> Result<(), Error> {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
@@ -344,6 +360,8 @@ impl Sandbox {
                 .expect("failed to execute process");
             println!("status: {}", output.status);
             println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+            println!("Setting up id mappings for {}", child);
+            self.setup_id_mappings_external(uid, gid, child)?;
             util::wait_for_child(child); // This never returns.
         }
     }
