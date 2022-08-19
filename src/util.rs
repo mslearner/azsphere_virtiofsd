@@ -108,14 +108,14 @@ pub fn sfork() -> io::Result<i32> {
 }
 
 pub fn wait_for_child(pid: i32) -> ! {
-    // Drop all capabilities, since the parent doesn't require any
-    // capabilities, as it'd be just waiting for the child to exit.
-    capng::clear(capng::Set::BOTH);
-    if let Err(e) = capng::apply(capng::Set::BOTH) {
-        // Don't exit the process here since we already have a child.
-        error!("warning: can't apply the parent capabilities: {}", e);
-    }
-
+    // // Drop all capabilities, since the parent doesn't require any
+    // // capabilities, as it'd be just waiting for the child to exit.
+    // capng::clear(capng::Set::BOTH);
+    // if let Err(e) = capng::apply(capng::Set::BOTH) {
+    //     // Don't exit the process here since we already have a child.
+    //     error!("warning: can't apply the parent capabilities: {}", e);
+    // }
+    println!("Not dropping capabilities for now....fix it later");
     let mut status = 0;
     // On success, `libc::waitpid()` returns the PID of the child.
     if unsafe { libc::waitpid(pid, &mut status, 0) } != pid {
