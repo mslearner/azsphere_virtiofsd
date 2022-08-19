@@ -378,7 +378,7 @@ impl Sandbox {
             Ok(())
         } else {
             // This is the parent.
-            println!("Process Id of child from root = {}", pid)
+            println!("Process Id of child from root = {}", pid);
            // self.setup_id_mappings(uid, gid, pid)?;
             util::wait_for_child(child); // This never returns.
         }
