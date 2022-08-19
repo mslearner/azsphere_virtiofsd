@@ -339,12 +339,13 @@ impl Sandbox {
         if child == 0 {
             // This is the child.
             if uid != 0 {
-                self.setup_id_mappings(uid, gid)?;
+                //self.setup_id_mappings(uid, gid)?;
             }
             self.setup_mounts()?;
             Ok(())
         } else {
             // This is the parent.
+            self.setup_id_mappings(uid, gid)?;
             util::wait_for_child(child); // This never returns.
         }
     }
