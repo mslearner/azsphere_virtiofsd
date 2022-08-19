@@ -308,7 +308,7 @@ impl Sandbox {
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
         let selfgroups_mapping = format!("/proc/{}/setgroups", pid);
         println!("selfgroups_mapping={}", selfgroups_mapping);
-        fs::write(selfgroups_mapping, "deny\n").map_err(Error::WriteSetGroups)?;
+        //fs::write(selfgroups_mapping, "deny\n").map_err(Error::WriteSetGroups)?;
 
         // Set up 1-to-1 mappings for our uid and gid.
         //let uid_mapping = format!("{} {} 1\n", uid, uid);
@@ -372,6 +372,7 @@ impl Sandbox {
             if uid != 0 {
                 // self.setup_id_mappings(uid, gid)?;
                 pid = process::id();
+                println!("Process Id of child = {}", pid)
             }
             self.setup_mounts()?;
             Ok(())
