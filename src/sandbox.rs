@@ -6,6 +6,7 @@ use crate::{oslib, util};
 use std::ffi::CString;
 use std::fs::{self, File};
 use std::os::unix::io::{AsRawFd, FromRawFd};
+use std::process;
 use std::str::FromStr;
 use std::{error, fmt, io};
 
@@ -279,19 +280,47 @@ impl Sandbox {
         Ok(())
     }
 
-    /// Sets 1-to-1 mappings for the current uid and gid.
-    fn setup_id_mappings(&self, uid: u32, gid: u32) -> Result<(), Error> {
+    // /// Sets 1-to-1 mappings for the current uid and gid.
+    // fn setup_id_mappings(&self, uid: u32, gid: u32) -> Result<(), Error> {
+    //     println!("---Setting up mappings uid={} gid={}----", uid, gid);
+    //     // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
+    //     fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
+
+    //     // Set up 1-to-1 mappings for our uid and gid.
+    //     //let uid_mapping = format!("{} {} 1\n", uid, uid);
+    //     let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+    //     fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
+
+    //     let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+    //     fs::write("/proc/self/gid_map", gid_mapping).map_err(Error::WriteGidMap)?;
+
+    //     // println!(
+    //     //     "---Setting up aditional mappings from (namespace) uid={} to host (uid) gid={}----",
+    //     //     897, 1001
+    //     // );
+    //     // let uid_mapping = format!("{} {} 1\n", 897, 1001);
+    //     // fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
+    //     Ok(())
+    // }
+
+    fn setup_id_mappings(&self, uid: u32, gid: u32, pid: u32) -> Result<(), Error> {
         println!("---Setting up mappings uid={} gid={}----", uid, gid);
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
-        fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
+        let safegroups_mapping = format!("/proc/{}/setgroups", pid);
+        fs::write(safegroups_mapping, "deny\n").map_err(Error::WriteSetGroups)?;
 
         // Set up 1-to-1 mappings for our uid and gid.
         //let uid_mapping = format!("{} {} 1\n", uid, uid);
         let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
-        fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
+        let path_uid_mapping = format!("/proc/{}/uid_map", pid);
+        println!("uid_mapping={}", uid_mapping);
 
+        fs::write(path_uid_mapping, uid_mapping).map_err(Error::WriteUidMap)?;
+
+        let path_gid_mapping = format!("/proc/{}/gid_map", pid);
         let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
-        fs::write("/proc/self/gid_map", gid_mapping).map_err(Error::WriteGidMap)?;
+        println!("gid_mapping={}", gid_mapping);
+        fs::write(path_gid_mapping, gid_mapping).map_err(Error::WriteGidMap)?;
 
         // println!(
         //     "---Setting up aditional mappings from (namespace) uid={} to host (uid) gid={}----",
@@ -336,16 +365,18 @@ impl Sandbox {
         }
 
         let child = util::sfork().map_err(Error::Fork)?;
+        let mut pid = 0;
         if child == 0 {
             // This is the child.
             if uid != 0 {
-                //self.setup_id_mappings(uid, gid)?;
+                // self.setup_id_mappings(uid, gid)?;
+                pid = process::id();
             }
             self.setup_mounts()?;
             Ok(())
         } else {
             // This is the parent.
-            self.setup_id_mappings(uid, gid)?;
+            self.setup_id_mappings(uid, gid, pid)?;
             util::wait_for_child(child); // This never returns.
         }
     }
