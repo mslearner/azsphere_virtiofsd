@@ -280,7 +280,7 @@ impl Sandbox {
     }
 
     /// Sets 1-to-1 mappings for the current uid and gid.
-    fn setup_id_mappings(&self, uid: u32, gid: u32) -> Result<(), Error> {
+    fn setup_id_mappings(&self, _uid: u32, _gid: u32) -> Result<(), Error> {
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
         fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
         println!("Adding extended mappings\n");
@@ -325,7 +325,8 @@ impl Sandbox {
 
         let ret = unsafe { libc::unshare(flags) };
         if ret != 0 {
-sys        }
+            return Err(Error::Unshare(std::io::Error::last_os_error()));
+        }
 
         let child = util::sfork().map_err(Error::Fork)?;
         if child == 0 {
