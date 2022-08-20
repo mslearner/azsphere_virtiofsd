@@ -325,8 +325,7 @@ impl Sandbox {
 
         let ret = unsafe { libc::unshare(flags) };
         if ret != 0 {
-            return Err(Error::Unshare(std::io::Error::last_os_error()));
-        }
+sys        }
 
         let child = util::sfork().map_err(Error::Fork)?;
         if child == 0 {
