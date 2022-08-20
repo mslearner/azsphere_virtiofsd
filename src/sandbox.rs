@@ -301,8 +301,8 @@ impl Sandbox {
             libc::getegid()
         });
 
-        //fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
-        //fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
+        fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
+        fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
 
         Ok(())
     }
@@ -360,7 +360,7 @@ impl Sandbox {
         if child == 0 {
             // This is the child.
             if uid != 0 {
-                self.setup_id_mappings(uid, gid)?;
+                // self.setup_id_mappings(uid, gid)?;
             }
 
             self.setup_mounts()?;
