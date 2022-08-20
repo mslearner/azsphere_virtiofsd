@@ -6,9 +6,9 @@ use crate::{oslib, util};
 use std::ffi::CString;
 use std::fs::{self, File};
 use std::os::unix::io::{AsRawFd, FromRawFd};
+use std::process;
 use std::str::FromStr;
 use std::{error, fmt, io};
-
 #[derive(Debug)]
 pub enum Error {
     /// Failed to bind mount `/proc/self/fd` into a temporary directory.
@@ -357,6 +357,7 @@ impl Sandbox {
             // This is the child.
             if uid != 0 {
                 //  self.setup_id_mappings(uid, gid)?;
+                println!("Children id is ={}", process::pid());
             }
             self.setup_mounts()?;
             Ok(())
