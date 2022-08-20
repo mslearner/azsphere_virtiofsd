@@ -363,13 +363,6 @@ impl Sandbox {
         } else {
             // This is the parent.
             println!("The pid of the child is {}", child);
-            use std::process::Command;
-            let output = Command::new("/bin/cat")
-                .arg("/proc/self/status")
-                .output()
-                .expect("failed to execute process");
-            println!("status: {}", output.status);
-            println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
             println!("Setting up id mappings for {}", child);
             self.setup_id_mappings_external(uid, gid, child)?;
             util::wait_for_child(child); // This never returns.
