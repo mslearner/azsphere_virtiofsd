@@ -357,7 +357,7 @@ impl Sandbox {
             // This is the child.
             if uid != 0 {
                 //  self.setup_id_mappings(uid, gid)?;
-                println!("Children id is ={}", process::pid());
+                println!("Children id is ={}", process::id());
             }
             self.setup_mounts()?;
             Ok(())
