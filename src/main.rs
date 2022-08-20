@@ -979,7 +979,7 @@ fn main() {
     }
 
     //--commented prashant
-    drop_capabilities(fs_cfg.inode_file_handles, opt.modcaps);
+    //drop_capabilities(fs_cfg.inode_file_handles, opt.modcaps);
 
     let fs = match PassthroughFs::new(fs_cfg) {
         Ok(fs) => fs,
