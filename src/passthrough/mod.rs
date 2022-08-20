@@ -94,8 +94,9 @@ macro_rules! scoped_cred {
         }
     };
 }
-scoped_cred!(ScopedUid, libc::uid_t, libc::SYS_setresuid);
-scoped_cred!(ScopedGid, libc::gid_t, libc::SYS_setresgid);
+//-commented prashant
+//scoped_cred!(ScopedUid, libc::uid_t, libc::SYS_setresuid);
+//scoped_cred!(ScopedGid, libc::gid_t, libc::SYS_setresgid);
 
 fn set_creds(
     uid: libc::uid_t,
