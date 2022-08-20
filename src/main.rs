@@ -978,7 +978,7 @@ fn main() {
         _ => enable_seccomp(opt.seccomp, opt.syslog).unwrap(),
     }
 
-    drop_capabilities(fs_cfg.inode_file_handles, opt.modcaps);
+    //[commented by prashant]  drop_capabilities(fs_cfg.inode_file_handles, opt.modcaps);
 
     let fs = match PassthroughFs::new(fs_cfg) {
         Ok(fs) => fs,
