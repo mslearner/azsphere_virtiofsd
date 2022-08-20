@@ -333,7 +333,11 @@ impl Sandbox {
             // This is the child.
             if uid != 0 {
                 self.setup_id_mappings(uid, gid)?;
+            } else {
+                println!("uid={}, still setting up mappings", uid);
+                self.setup_id_mappings(uid, gid)?;
             }
+
             self.setup_mounts()?;
             Ok(())
         } else {
