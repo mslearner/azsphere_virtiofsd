@@ -284,7 +284,7 @@ impl Sandbox {
         println!("Disabling setgroups for child");
         let setgroups_mapping_format = format!("/proc/{}/setgroups", pid);
         fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
-
+        
         // Set up 1-to-1 mappings for our uid and gid.
         let uid_mapping_format = format!("/proc/{}/uid_map", pid);
         let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
@@ -329,8 +329,11 @@ impl Sandbox {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
 
+        println! ("Caps before entering namespace");
+        util::print_caps();
+        
         let flags = if uid == 0 {
-            libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET | libc::CLONE_NEWUSER
+            libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
         } else {
             // If running as an unprivileged user, rely on user_namespaces(7) for isolation. The
             // main limitation of this strategy is that only the current uid/gid are mapped into
@@ -363,16 +366,17 @@ impl Sandbox {
             // This is the child.
             if uid != 0 {
                 // self.setup_id_mappings(uid, gid)?;
+                
             }
 
             println!("caps of child");
             util::print_caps();
 
-            // self.setup_mounts()?;
+            self.setup_mounts()?;
             // loop {
-
+                
             // }
-
+            ;
             Ok(())
         } else {
             // This is the parent.
