@@ -282,7 +282,7 @@ impl Sandbox {
     fn setup_id_mappings_external(&self, _uid: u32, _gid: u32, pid: i32) -> Result<(), Error> {
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
         println!("Disabling setgroups for child");
-        let setgroups_mapping_format = format!("/proc/{}/setgroups", pid);
+        let setgroups_mapping_format = format!("/proc/self/setgroups", pid);
         fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
         
         // Set up 1-to-1 mappings for our uid and gid.
