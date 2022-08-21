@@ -438,7 +438,7 @@ impl Sandbox {
           return Err(Error::Unshare(std::io::Error::last_os_error()));
         }
             if uid != 0 {
-                println!("uid={}, Child is setting up mappings", uid);
+               // println!("uid={}, Child is setting up mappings", uid);
                   //self.setup_id_mappings(uid, gid)?;
                 
             }
