@@ -361,12 +361,15 @@ impl Sandbox {
             return Err(Error::Unshare(std::io::Error::last_os_error()));
         }
 
-        let child = util::sfork().map_err(Error::Fork)?;
+        println!("uid={}, do it before the child is forked", uid);
+        self.setup_id_mappings(uid, gid)?;
+        
+                  let child = util::sfork().map_err(Error::Fork)?;
         if child == 0 {
             // This is the child.
             if uid != 0 {
                 println!("uid={}, Child is setting up mappings", uid);
-                  self.setup_id_mappings(uid, gid)?;
+                  //self.setup_id_mappings(uid, gid)?;
                 
             }
 
