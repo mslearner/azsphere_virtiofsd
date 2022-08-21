@@ -108,6 +108,7 @@ pub fn sfork() -> io::Result<i32> {
     Ok(child_pid)
 }
 
+
 pub fn wait_for_child(pid: i32) -> ! {
     // Drop all capabilities, since the parent doesn't require any
     // capabilities, as it'd be just waiting for the child to exit.
