@@ -284,7 +284,7 @@ impl Sandbox {
         //println!("Disabling setgroups for child");
         //let setgroups_mapping_format = format!("/proc/self/setgroups");
         //fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
-        
+
         // Set up 1-to-1 mappings for our uid and gid.
         let uid_mapping_format = format!("/proc/{}/uid_map", pid);
         let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
@@ -305,7 +305,6 @@ impl Sandbox {
 
         fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
         fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
-        
 
         Ok(())
     }
@@ -332,7 +331,7 @@ impl Sandbox {
 
     //     println! ("Caps before entering namespace");
     //     util::print_caps();
-        
+
     //     let flags = if uid == 0 {
     //         libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
     //     } else {
@@ -362,14 +361,13 @@ impl Sandbox {
     //         return Err(Error::Unshare(std::io::Error::last_os_error()));
     //     }
 
-        
     //     let child = util::sfork().map_err(Error::Fork)?;
     //     if child == 0 {
     //         // This is the child.
     //         if uid != 0 {
     //             println!("uid={}, Child is setting up mappings", uid);
     //               //self.setup_id_mappings(uid, gid)?;
-                
+
     //         }
 
     //         println!("caps of child");
@@ -377,7 +375,7 @@ impl Sandbox {
 
     //         self.setup_mounts()?;
     //         // loop {
-                
+
     //         // }
     //         ;
     //         Ok(())
@@ -398,9 +396,9 @@ impl Sandbox {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
 
-        println! ("Caps before entering namespace");
+        println!("Caps before entering namespace");
         util::print_caps();
-        
+
         let flags = if uid == 0 {
             libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
         } else {
@@ -427,31 +425,28 @@ impl Sandbox {
 
         //let ret = unsafe { libc::unshare(flags) };
         //if ret != 0 {
-          //return Err(Error::Unshare(std::io::Error::last_os_error()));
+        //return Err(Error::Unshare(std::io::Error::last_os_error()));
         //}
 
-        
         let child = util::sfork().map_err(Error::Fork)?;
         if child == 0 {
             // This is the child.
             let ret = unsafe { libc::unshare(flags) };
-        if ret != 0 {
-          return Err(Error::Unshare(std::io::Error::last_os_error()));
-        }
+            if ret != 0 {
+                return Err(Error::Unshare(std::io::Error::last_os_error()));
+            }
             if uid != 0 {
-               // println!("uid={}, Child is setting up mappings", uid);
-                  //self.setup_id_mappings(uid, gid)?;
-                
+                // println!("uid={}, Child is setting up mappings", uid);
+                //self.setup_id_mappings(uid, gid)?;
             }
 
             println!("caps of child");
             util::print_caps();
 
+            loop {}
+
             self.setup_mounts()?;
-            // loop {
-                
-            // }
-            ;
+
             Ok(())
         } else {
             // This is the parent.
@@ -465,7 +460,6 @@ impl Sandbox {
             util::wait_for_child(child); // This never returns.
         }
     }
-
 
     pub fn enter_chroot(&mut self) -> Result<(), Error> {
         let c_proc_self_fd = CString::new("/proc/self/fd").unwrap();
