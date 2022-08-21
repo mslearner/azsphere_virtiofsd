@@ -375,7 +375,7 @@ impl Sandbox {
         } else {
             // This is the parent.
 
-            println!("caps of child");
+            println!("caps of parent");
             util::print_caps();
 
             println!("uid={}, Parent is setting up mappings", uid);
