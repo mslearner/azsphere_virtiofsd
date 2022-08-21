@@ -303,8 +303,9 @@ impl Sandbox {
             libc::getegid()
         });
 
-        // fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
         fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
+        fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
+        
 
         Ok(())
     }
