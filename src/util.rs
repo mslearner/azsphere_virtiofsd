@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use caps;
 use std::fs::{File, OpenOptions};
 use std::io::{Error, ErrorKind, Write};
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
@@ -135,4 +136,39 @@ pub fn wait_for_child(pid: i32) -> ! {
     };
 
     process::exit(exit_code);
+}
+
+type ExResult<T> = Result<T, Box<dyn std::error::Error + 'static>>;
+
+pub fn print_caps() -> ExResult<()> {
+    use caps::{CapSet, Capability};
+
+    // Check if `CAP_CHOWN` was originally available.
+    let cur = caps::read(None, CapSet::Permitted)?;
+    println!("-> Current permitted caps: {:?}.", cur);
+    let cur = caps::read(None, CapSet::Effective)?;
+    println!("-> Current effective caps: {:?}.", cur);
+    let perm_chown = caps::has_cap(None, CapSet::Permitted, Capability::CAP_CHOWN);
+    assert!(perm_chown.is_ok());
+    if !perm_chown? {
+        return Err(
+            "Try running this again as root/sudo or with CAP_CHOWN file capability!".into(),
+        );
+    }
+
+    // }
+
+    // // Clear all effective caps.
+    // caps::clear(None, CapSet::Effective)?;
+    // println!("Cleared effective caps.");
+    // let cur = caps::read(None, CapSet::Effective)?;
+    // println!("Current effective caps: {:?}.", cur);
+
+    // // Since `CAP_CHOWN` is still in permitted, it can be raised again.
+    // caps::raise(None, CapSet::Effective, Capability::CAP_CHOWN)?;
+    // println!("Raised CAP_CHOWN in effective set.");
+    // let cur = caps::read(None, CapSet::Effective)?;
+    // println!("Current effective caps: {:?}.", cur);
+
+    Ok(())
 }
