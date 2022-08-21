@@ -301,8 +301,6 @@ impl Sandbox {
             libc::getegid()
         });
 
-        util::print_caps();
-
         // fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
         fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
 
@@ -364,6 +362,9 @@ impl Sandbox {
             if uid != 0 {
                 // self.setup_id_mappings(uid, gid)?;
             }
+
+            println!("caps of child");
+            util::print_caps();
 
             self.setup_mounts()?;
             Ok(())
