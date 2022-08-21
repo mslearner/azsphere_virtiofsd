@@ -365,7 +365,8 @@ impl Sandbox {
         if child == 0 {
             // This is the child.
             if uid != 0 {
-                // self.setup_id_mappings(uid, gid)?;
+                println!("uid={}, Child is setting up mappings", uid);
+                  self.setup_id_mappings(uid, gid)?;
                 
             }
 
@@ -384,8 +385,8 @@ impl Sandbox {
             println!("caps of parent");
             util::print_caps();
 
-            println!("uid={}, Parent is setting up mappings", uid);
-            self.setup_id_mappings_external(uid, gid, child)?;
+            //println!("uid={}, Parent is setting up mappings", uid);
+            //self.setup_id_mappings_external(uid, gid, child)?;
 
             util::wait_for_child(child); // This never returns.
         }
