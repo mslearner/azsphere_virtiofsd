@@ -366,10 +366,17 @@ impl Sandbox {
             println!("caps of child");
             util::print_caps();
 
-            self.setup_mounts()?;
+            // self.setup_mounts()?;
+            // loop {
+                
+            // }
+            ;
             Ok(())
         } else {
             // This is the parent.
+
+            println!("caps of child");
+            util::print_caps();
 
             println!("uid={}, Parent is setting up mappings", uid);
             self.setup_id_mappings_external(uid, gid, child)?;
