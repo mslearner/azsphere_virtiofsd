@@ -14,6 +14,7 @@ use std::path::Path;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::{env, error, fmt, io, process};
+use virtiofsd::util;
 
 use structopt::StructOpt;
 
@@ -840,6 +841,9 @@ fn main() {
         print_capabilities();
         return;
     }
+
+    println!("*caps on entering main");
+    virtiofsd::util::print_caps();
 
     initialize_logging(&opt);
     set_signal_handlers();
