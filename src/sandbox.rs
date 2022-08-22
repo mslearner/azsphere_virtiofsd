@@ -1,7 +1,7 @@
 // Copyright 2020 Red Hat, Inc. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
+use crate::{oslib, util};
 use std::ffi::CString;
 use std::fs::{self, File};
 use std::os::unix::io::{AsRawFd, FromRawFd};
@@ -370,7 +370,7 @@ impl Sandbox {
             self.drop_supplemental_groups()?;
         }
 
-        let child = util::sfork().map_err(Error::Fork)?;
+libc::fork()
         if child != 0 {
             //this is parent level 0"
             unsafe {
