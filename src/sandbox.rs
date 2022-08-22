@@ -359,7 +359,7 @@ impl Sandbox {
 
         let child = util::sfork().map_err(Error::Fork)?;
         if child != 0 {
-            println!("this is SUPER parent");
+            println!("this is parent level 0");
             unsafe {
                 sleep(5);
             }
@@ -377,7 +377,8 @@ impl Sandbox {
         } else {
             // This is the parent.
 
-            println!("this is child");
+            println!("this is child level 0");
+            println!("this is parent level 1");
             let ret = unsafe { libc::unshare(flags) };
             if ret != 0 {
                 return Err(Error::Unshare(std::io::Error::last_os_error()));
@@ -389,15 +390,10 @@ impl Sandbox {
                     // println!("uid={}, Child is setting up mappings", uid);
                     //self.setup_id_mappings(uid, gid)?;
                 }
-
-                //println!("caps of child");
-                //util::print_caps();
+                self.setup_mounts()?;
                 Ok(())
             } else {
-                // This is the parent.
-
-                //println!("caps of parent");
-                //util::print_caps();
+                // This is the parent Level 1
 
                 util::wait_for_child(child); // This never returns.
             }
