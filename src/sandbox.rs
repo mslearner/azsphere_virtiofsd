@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use crate::{oslib, util};
+use libc::sleep;
 use std::ffi::CString;
 use std::fs::{self, File};
 use std::os::unix::io::{AsRawFd, FromRawFd};
@@ -281,9 +282,9 @@ impl Sandbox {
 
     fn setup_id_mappings_external(&self, _uid: u32, _gid: u32, pid: i32) -> Result<(), Error> {
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
-        println!("Disabling setgroups for child");
-        let setgroups_mapping_format = format!("/proc/{}/setgroups", pid);
-        fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
+        // println!("Disabling setgroups for child");
+        // let setgroups_mapping_format = format!("/proc/{}/setgroups", pid);
+        // fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
 
         // Set up 1-to-1 mappings for our uid and gid.
         let uid_mapping_format = format!("/proc/{}/uid_map", pid);
@@ -343,7 +344,7 @@ impl Sandbox {
 
         // Drop supplemental groups. This is running as root and will
         // support arbitrary uid/gid switching and we don't want to
-        // retain membership of any supplementary groups.git 
+        // retain membership of any supplementary groups.git
         //
         // This is not necessarily required for non-root case, where
         // unprivileged user has started us, we will setup one user
@@ -359,6 +360,7 @@ impl Sandbox {
         let child = util::sfork().map_err(Error::Fork)?;
         if child != 0 {
             println!("this is SUPER parent");
+            sleep(5);
             println!("uid={}, SUPER Parent is setting up mappings", uid);
             self.setup_id_mappings_external(uid, gid, child)?;
 
