@@ -156,15 +156,23 @@ pub fn set_caps() -> ExResult<()> {
     use caps::{CapSet, Capability};
     if let Ok(perm_setuid) = caps::has_cap(None, CapSet::Permitted, Capability::CAP_SETUID) {
         if perm_setuid {
-            caps::raise(None, CapSet::Effective, Capability::CAP_SETUID);
+            caps::raise(None, CapSet::Effective, Capability::CAP_SETUID)?;
         }
     }
 
     if let Ok(perm_setgid) = caps::has_cap(None, CapSet::Permitted, Capability::CAP_SETGID) {
         if perm_setgid {
-            caps::raise(None, CapSet::Effective, Capability::CAP_SETGID);
+            caps::raise(None, CapSet::Effective, Capability::CAP_SETGID)?;
         }
     }
+
+    Ok(())
+}
+pub fn drop_all_caps() -> ExResult<()> {
+    use caps::{CapSet, Capability};
+
+    caps::clear(None, CapSet::Permitted)?;
+    caps::clear(None, CapSet::Effective)?;
 
     Ok(())
 }
