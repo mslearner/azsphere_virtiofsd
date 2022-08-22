@@ -383,14 +383,14 @@ impl Sandbox {
                     //self.setup_id_mappings(uid, gid)?;
                 }
 
-                println!("caps of child");
-                util::print_caps();
+                //println!("caps of child");
+                //util::print_caps();
                 Ok(())
             } else {
                 // This is the parent.
 
-                println!("caps of parent");
-                util::print_caps();
+                //println!("caps of parent");
+                //util::print_caps();
 
                 util::wait_for_child(child); // This never returns.
             }
