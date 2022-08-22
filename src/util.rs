@@ -108,7 +108,6 @@ pub fn sfork() -> io::Result<i32> {
     Ok(child_pid)
 }
 
-
 pub fn wait_for_child(pid: i32) -> ! {
     // Drop all capabilities, since the parent doesn't require any
     // capabilities, as it'd be just waiting for the child to exit.
@@ -142,34 +141,30 @@ pub fn wait_for_child(pid: i32) -> ! {
 type ExResult<T> = Result<T, Box<dyn std::error::Error + 'static>>;
 
 pub fn print_caps() -> ExResult<()> {
-    use caps::{CapSet, Capability};
+    use caps::CapSet;
 
     // Check if `CAP_CHOWN` was originally available.
     let cur = caps::read(None, CapSet::Permitted)?;
     println!("-> Current permitted caps: {:?}.", cur);
     let cur = caps::read(None, CapSet::Effective)?;
     println!("-> Current effective caps: {:?}.", cur);
-    let perm_chown = caps::has_cap(None, CapSet::Permitted, Capability::CAP_CHOWN);
-    assert!(perm_chown.is_ok());
-    if !perm_chown? {
-        return Err(
-            "Try running this again as root/sudo or with CAP_CHOWN file capability!".into(),
-        );
+
+    Ok(())
+}
+
+pub fn set_caps() -> ExResult<()> {
+    use caps::{CapSet, Capability};
+    if let Ok(perm_setuid) = caps::has_cap(None, CapSet::Permitted, Capability::CAP_SETUID) {
+        if perm_setuid {
+            caps::raise(None, CapSet::Effective, Capability::CAP_SETUID);
+        }
     }
 
-    // }
-
-    // // Clear all effective caps.
-    // caps::clear(None, CapSet::Effective)?;
-    // println!("Cleared effective caps.");
-    // let cur = caps::read(None, CapSet::Effective)?;
-    // println!("Current effective caps: {:?}.", cur);
-
-    // // Since `CAP_CHOWN` is still in permitted, it can be raised again.
-    // caps::raise(None, CapSet::Effective, Capability::CAP_CHOWN)?;
-    // println!("Raised CAP_CHOWN in effective set.");
-    // let cur = caps::read(None, CapSet::Effective)?;
-    // println!("Current effective caps: {:?}.", cur);
+    if let Ok(perm_setgid) = caps::has_cap(None, CapSet::Permitted, Capability::CAP_SETGID) {
+        if perm_setgid {
+            caps::raise(None, CapSet::Effective, Capability::CAP_SETGID);
+        }
+    }
 
     Ok(())
 }
