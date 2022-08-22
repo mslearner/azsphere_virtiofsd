@@ -14,7 +14,6 @@ use std::path::Path;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::{env, error, fmt, io, process};
-use virtiofsd::util;
 
 use structopt::StructOpt;
 

@@ -138,45 +138,38 @@ pub fn wait_for_child(pid: i32) -> ! {
     process::exit(exit_code);
 }
 
-type ExResult<T> = Result<T, Box<dyn std::error::Error + 'static>>;
-
-pub fn print_caps() -> ExResult<()> {
+pub fn print_caps() -> () {
     use caps::CapSet;
 
     // Check if `CAP_CHOWN` was originally available.
-    let cur = caps::read(None, CapSet::Permitted)?;
-    println!("-> Current permitted caps: {:?}.", cur);
-    let cur = caps::read(None, CapSet::Effective)?;
-    println!("-> Current effective caps: {:?}.", cur);
-    let cur = caps::read(None, CapSet::Bounding)?;
-    println!("-> Current bounding caps: {:?}.", cur);
-
-    Ok(())
+    let cur = caps::read(None, CapSet::Permitted).expect("Failed to read Capset Permitted");
+    debug!("-> Current permitted caps: {:?}.", cur);
+    let cur = caps::read(None, CapSet::Effective).expect("Failed to read Capset Effective");
+    debug!("-> Current effective caps: {:?}.", cur);
+    let cur = caps::read(None, CapSet::Bounding).expect("Failed to read Capset Bounding");
+    debug!("-> Current bounding caps: {:?}.", cur);
 }
 
-pub fn set_caps() -> ExResult<()> {
+pub fn set_caps() -> () {
     use caps::{CapSet, Capability};
     if let Ok(perm_setuid) = caps::has_cap(None, CapSet::Bounding, Capability::CAP_SETUID) {
         if perm_setuid {
-            println!("raising setuid");
-            caps::raise(None, CapSet::Effective, Capability::CAP_SETUID)?;
+            caps::raise(None, CapSet::Effective, Capability::CAP_SETUID)
+                .expect("Failed to write Capset Effectve");
         }
     }
 
     if let Ok(perm_setgid) = caps::has_cap(None, CapSet::Bounding, Capability::CAP_SETGID) {
         if perm_setgid {
-            println!("raising setgid");
-            caps::raise(None, CapSet::Effective, Capability::CAP_SETGID)?;
+            caps::raise(None, CapSet::Effective, Capability::CAP_SETGID)
+                .expect("Failed to write Capset Effectve");
         }
     }
-
-    Ok(())
 }
-pub fn drop_all_caps() -> ExResult<()> {
-    use caps::{CapSet, Capability};
+pub fn drop_all_caps() -> () {
+    use caps::CapSet;
 
-    caps::clear(None, CapSet::Permitted)?;
-    caps::clear(None, CapSet::Effective)?;
-
-    Ok(())
+    info!("Info: Dropping all capabilities");
+    caps::clear(None, CapSet::Permitted).expect("Failed to clear capset Permitted");
+    caps::clear(None, CapSet::Effective).expect("Failed to clear capset Permitted");
 }

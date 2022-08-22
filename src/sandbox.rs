@@ -292,15 +292,15 @@ impl Sandbox {
 
         let gid_mapping_format = format!("/proc/{}/gid_map", pid);
         let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
-        println!(
+        debug!(
             "uid_mapping_format={},uid_mapping={}",
             uid_mapping_format, uid_mapping
         );
-        println!(
+        debug!(
             "gid_mapping_format={},gid_mapping={}",
             gid_mapping_format, gid_mapping
         );
-        println!("uid={},gid={}", unsafe { libc::geteuid() }, unsafe {
+        debug!("uid={},gid={}", unsafe { libc::geteuid() }, unsafe {
             libc::getegid()
         });
 
@@ -314,7 +314,6 @@ impl Sandbox {
     fn setup_id_mappings(&self, _uid: u32, _gid: u32) -> Result<(), Error> {
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
         fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
-        println!("Adding extended mappings\n");
         // Set up 1-to-1 mappings for our uid and gid.
         //let uid_mapping = format!("{} {} 1\n", uid, uid);
         let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
@@ -330,8 +329,7 @@ impl Sandbox {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
 
-        println!("Caps before entering namespace");
-        util::print_caps();
+        //util::print_caps();
 
         let flags = if uid == 0 {
             libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
@@ -359,17 +357,16 @@ impl Sandbox {
 
         let child = util::sfork().map_err(Error::Fork)?;
         if child != 0 {
-            println!("this is parent level 0");
+            //this is parent level 0"
             unsafe {
+                //ToDo::This needs be a signal based synchronization. Will add it.
                 sleep(5);
             }
-            println!("SUPER Parent is setting up mappings uid={}", uid);
-            util::print_caps();
+            debug!("SUPER Parent is setting up mappings uid={}", uid);
             util::set_caps();
-            println!("Got capabilities={}", uid);
             util::print_caps();
             self.setup_id_mappings_external(uid, gid, child)?;
-            println!("Mappings done, dropping caps for {}", uid);
+            info!("Mappings done, dropping caps for {}", uid);
             util::drop_all_caps();
             util::print_caps();
 
@@ -377,8 +374,8 @@ impl Sandbox {
         } else {
             // This is the parent.
 
-            println!("this is child level 0");
-            println!("this is parent level 1");
+            //"this is child level 0";
+            //"this is parent level 1";
             let ret = unsafe { libc::unshare(flags) };
             if ret != 0 {
                 return Err(Error::Unshare(std::io::Error::last_os_error()));
@@ -387,6 +384,8 @@ impl Sandbox {
             let child = util::sfork().map_err(Error::Fork)?;
             if child == 0 {
                 if uid != 0 {
+                    //Although Sphere will not use this case we should bring this case back
+
                     // println!("uid={}, Child is setting up mappings", uid);
                     //self.setup_id_mappings(uid, gid)?;
                 }
