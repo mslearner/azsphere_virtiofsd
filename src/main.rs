@@ -841,6 +841,7 @@ fn main() {
         return;
     }
 
+    //(Sphere)Fix this - this should only be printed in debug mode
     println!("*caps on entering main");
     virtiofsd::util::print_caps();
 
