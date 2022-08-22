@@ -148,19 +148,21 @@ pub fn print_caps() -> ExResult<()> {
     println!("-> Current permitted caps: {:?}.", cur);
     let cur = caps::read(None, CapSet::Effective)?;
     println!("-> Current effective caps: {:?}.", cur);
+    let cur = caps::read(None, CapSet::Bounding)?;
+    println!("-> Current effective caps: {:?}.", cur);
 
     Ok(())
 }
 
 pub fn set_caps() -> ExResult<()> {
     use caps::{CapSet, Capability};
-    if let Ok(perm_setuid) = caps::has_cap(None, CapSet::Permitted, Capability::CAP_SETUID) {
+    if let Ok(perm_setuid) = caps::has_cap(None, CapSet::Bounding, Capability::CAP_SETUID) {
         if perm_setuid {
             caps::raise(None, CapSet::Effective, Capability::CAP_SETUID)?;
         }
     }
 
-    if let Ok(perm_setgid) = caps::has_cap(None, CapSet::Permitted, Capability::CAP_SETGID) {
+    if let Ok(perm_setgid) = caps::has_cap(None, CapSet::Bounding, Capability::CAP_SETGID) {
         if perm_setgid {
             caps::raise(None, CapSet::Effective, Capability::CAP_SETGID)?;
         }
