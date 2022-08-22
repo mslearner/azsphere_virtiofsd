@@ -335,7 +335,7 @@ impl Sandbox {
 
         // Drop supplemental groups. This is running as root and will
         // support arbitrary uid/gid switching and we don't want to
-        // retain membership of any supplementary groups
+        // retain membership of any supplementary groups.
         //
         // This is not necessarily required for non-root case, where
         // unprivileged user has started us, we will setup one user
