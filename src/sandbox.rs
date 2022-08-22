@@ -281,10 +281,10 @@ impl Sandbox {
 
     fn setup_id_mappings_external(&self, _uid: u32, _gid: u32, pid: i32) -> Result<(), Error> {
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
-        //println!("Disabling setgroups for child");
-        //let setgroups_mapping_format = format!("/proc/self/setgroups");
-        //fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
-
+        println!("Disabling setgroups for child");
+        let setgroups_mapping_format = format!("/proc/{}/setgroups", pid);
+        fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
+        
         // Set up 1-to-1 mappings for our uid and gid.
         let uid_mapping_format = format!("/proc/{}/uid_map", pid);
         let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
@@ -303,8 +303,8 @@ impl Sandbox {
             libc::getegid()
         });
 
-        fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
         fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
+        fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
 
         Ok(())
     }
@@ -325,13 +325,81 @@ impl Sandbox {
         Ok(())
     }
 
+    // pub fn enter_namespace(&mut self) -> Result<(), Error> {
+    //     let uid = unsafe { libc::geteuid() };
+    //     let gid = unsafe { libc::getegid() };
+
+    //     println! ("Caps before entering namespace");
+    //     util::print_caps();
+        
+    //     let flags = if uid == 0 {
+    //         libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
+    //     } else {
+    //         // If running as an unprivileged user, rely on user_namespaces(7) for isolation. The
+    //         // main limitation of this strategy is that only the current uid/gid are mapped into
+    //         // the new namespace, so most operations on permissions will fail.
+    //         libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET | libc::CLONE_NEWUSER
+    //     };
+
+    //     // Drop supplemental groups. This is running as root and will
+    //     // support arbitrary uid/gid switching and we don't want to
+    //     // retain membership of any supplementary groups.
+    //     //
+    //     // This is not necessarily required for non-root case, where
+    //     // unprivileged user has started us, we will setup one user
+    //     // namespace with 1:1 mapping and there is no arbitrary uid/gid
+    //     // switching at all. In this mode setgroups() is not allowed, so
+    //     // we can't drop supplementary groups even if wanted to. Only
+    //     // way to do this will be to use newuidmap/newgidmap to setup
+    //     // user namespace which will allow setgroups().
+    //     if uid == 0 {
+    //         self.drop_supplemental_groups()?;
+    //     }
+
+    //     let ret = unsafe { libc::unshare(flags) };
+    //     if ret != 0 {
+    //         return Err(Error::Unshare(std::io::Error::last_os_error()));
+    //     }
+
+        
+    //     let child = util::sfork().map_err(Error::Fork)?;
+    //     if child == 0 {
+    //         // This is the child.
+    //         if uid != 0 {
+    //             println!("uid={}, Child is setting up mappings", uid);
+    //               //self.setup_id_mappings(uid, gid)?;
+                
+    //         }
+
+    //         println!("caps of child");
+    //         util::print_caps();
+
+    //         self.setup_mounts()?;
+    //         // loop {
+                
+    //         // }
+    //         ;
+    //         Ok(())
+    //     } else {
+    //         // This is the parent.
+
+    //         println!("caps of parent");
+    //         util::print_caps();
+
+    //         //println!("uid={}, Parent is setting up mappings", uid);
+    //         //self.setup_id_mappings_external(uid, gid, child)?;
+
+    //         util::wait_for_child(child); // This never returns.
+    //     }
+    // }
+
     pub fn enter_namespace(&mut self) -> Result<(), Error> {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
 
-        println!("Caps before entering namespace");
+        println! ("Caps before entering namespace");
         util::print_caps();
-
+        
         let flags = if uid == 0 {
             libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
         } else {
@@ -358,22 +426,31 @@ impl Sandbox {
 
         //let ret = unsafe { libc::unshare(flags) };
         //if ret != 0 {
-        //return Err(Error::Unshare(std::io::Error::last_os_error()));
+          //return Err(Error::Unshare(std::io::Error::last_os_error()));
         //}
 
+        
         let child = util::sfork().map_err(Error::Fork)?;
         if child == 0 {
             // This is the child.
             let ret = unsafe { libc::unshare(flags) };
-            if ret != 0 {
-                return Err(Error::Unshare(std::io::Error::last_os_error()));
-            }
+        if ret != 0 {
+          return Err(Error::Unshare(std::io::Error::last_os_error()));
+        }
             if uid != 0 {
-                // println!("uid={}, Child is setting up mappings", uid);
-                //self.setup_id_mappings(uid, gid)?;
+               // println!("uid={}, Child is setting up mappings", uid);
+                  //self.setup_id_mappings(uid, gid)?;
+                
             }
-            self.setup_mounts()?;
 
+            println!("caps of child");
+            util::print_caps();
+
+            self.setup_mounts()?;
+            // loop {
+                
+            // }
+            ;
             Ok(())
         } else {
             // This is the parent.
@@ -387,6 +464,7 @@ impl Sandbox {
             util::wait_for_child(child); // This never returns.
         }
     }
+
 
     pub fn enter_chroot(&mut self) -> Result<(), Error> {
         let c_proc_self_fd = CString::new("/proc/self/fd").unwrap();
