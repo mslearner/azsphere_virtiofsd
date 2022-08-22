@@ -340,9 +340,11 @@ impl Sandbox {
         Ok(())
     }
 
-    pub fn enter_namespace(&mut self) -> Result<Option<i32>, Error> {
+    pub fn enter_namespace(&mut self) -> Result<(), Error> {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
+
+        //util::print_caps();
 
         let flags = if uid == 0 {
             libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
@@ -368,28 +370,47 @@ impl Sandbox {
             self.drop_supplemental_groups()?;
         }
 
-        let ret = unsafe { libc::unshare(flags) };
-        if ret != 0 {
-            return Err(Error::Unshare(std::io::Error::last_os_error()));
-        }
+        let child = util::sfork().map_err(Error::Fork)?;
+        if child != 0 {
+            //this is parent level 0"
+            unsafe {
+                //ToDo::This needs be a signal based synchronization. Will add it.
+                sleep(5);
+            }
+            debug!("SUPER Parent is setting up mappings uid={}", uid);
+            util::set_caps();
+            util::print_caps();
+            self.setup_id_mappings_external(uid, gid, child)?;
+            info!("Mappings done, dropping caps for {}", uid);
+            util::drop_all_caps();
+            util::print_caps();
 
-        let child = unsafe { libc::fork() };
-        match child {
-            0 => {
-                // This is the child. Request to receive SIGTERM on parent's death.
-                // FIXME: Race condition: the parent process might have died already.
-                unsafe { libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM) };
+            util::wait_for_child(child); // This never returns.
+        } else {
+            // This is the parent.
+
+            //"this is child level 0";
+            //"this is parent level 1";
+            let ret = unsafe { libc::unshare(flags) };
+            if ret != 0 {
+                return Err(Error::Unshare(std::io::Error::last_os_error()));
+            }
+
+            let child = util::sfork().map_err(Error::Fork)?;
+            if child == 0 {
                 if uid != 0 {
-                    self.setup_id_mappings(uid, gid)?;
+                    //Although Sphere will not use this case we should bring this case back
+
+                    // println!("uid={}, Child is setting up mappings", uid);
+                    //self.setup_id_mappings(uid, gid)?;
                 }
                 self.setup_mounts()?;
-                Ok(None)
+                Ok(())
+            } else {
+                // This is the parent Level 1
+
+                util::wait_for_child(child); // This never returns.
             }
-            x if x > 0 => {
-                // This is the parent.
-                Ok(Some(child))
-            }
-            _ => Err(Error::Fork(std::io::Error::last_os_error())),
         }
     }
 
