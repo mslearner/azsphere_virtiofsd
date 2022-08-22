@@ -379,7 +379,7 @@ impl Sandbox {
             println!("caps of child");
             util::print_caps();
 
-            self.setup_mounts()?;
+           // self.setup_mounts()?;
             // loop {
                 
             // }
