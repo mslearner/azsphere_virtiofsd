@@ -486,3 +486,28 @@ impl Sandbox {
         }
     }
 }
+
+fn setup_id_mappings_external(&self, _uid: u32, _gid: u32, pid: i32) -> Result<(), Error> {
+    // Set up 1-to-1 mappings for our uid and gid.
+    let uid_mapping_format = format!("/proc/{}/uid_map", pid);
+    let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+
+    let gid_mapping_format = format!("/proc/{}/gid_map", pid);
+    let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+    debug!(
+        "uid_mapping_format={},uid_mapping={}",
+        uid_mapping_format, uid_mapping
+    );
+    debug!(
+        "gid_mapping_format={},gid_mapping={}",
+        gid_mapping_format, gid_mapping
+    );
+    debug!("uid={},gid={}", unsafe { libc::geteuid() }, unsafe {
+        libc::getegid()
+    });
+
+    fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
+    fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
+
+    Ok(())
+}
