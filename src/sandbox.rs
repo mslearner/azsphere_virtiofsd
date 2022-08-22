@@ -357,20 +357,15 @@ impl Sandbox {
             self.drop_supplemental_groups()?;
         }
 
-        //let ret = unsafe { libc::unshare(flags) };
-        //if ret != 0 {
-          //return Err(Error::Unshare(std::io::Error::last_os_error()));
-        //}
+        let ret = unsafe { libc::unshare(flags) };
+        if ret != 0 {
+          return Err(Error::Unshare(std::io::Error::last_os_error()));
+        }
 
         
         let child = util::sfork().map_err(Error::Fork)?;
         if child == 0 {
-            // This is the child.
-            let ret = unsafe { libc::unshare(flags) };
-        if ret != 0 {
-          return Err(Error::Unshare(std::io::Error::last_os_error()));
-        }
-            if uid != 0 {
+           if uid != 0 {
                // println!("uid={}, Child is setting up mappings", uid);
                   //self.setup_id_mappings(uid, gid)?;
                 
