@@ -305,21 +305,6 @@ impl Sandbox {
         Ok(())
     }
 
-    /// Sets 1-to-1 mappings for the current uid and gid.
-    fn setup_id_mappings(&self, _uid: u32, _gid: u32) -> Result<(), Error> {
-        // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
-        fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
-        // Set up 1-to-1 mappings for our uid and gid.
-        //let uid_mapping = format!("{} {} 1\n", uid, uid);
-        let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
-        fs::write("/proc/self/uid_map", uid_mapping).map_err(Error::WriteUidMap)?;
-
-        //let gid_mapping = format!("{} {} 1\n", gid, gid);
-        let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
-        fs::write("/proc/self/gid_map", gid_mapping).map_err(Error::WriteGidMap)?;
-        Ok(())
-    }
-
     pub fn enter_namespace(&mut self) -> Result<(), Error> {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
