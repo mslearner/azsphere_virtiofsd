@@ -369,8 +369,8 @@ impl Sandbox {
             println!("Got capabilities={}", uid);
             util::print_caps();
             self.setup_id_mappings_external(uid, gid, child)?;
-            util::drop_all_caps();
             println!("Mappings done, dropping caps for {}", uid);
+            util::drop_all_caps();
             util::print_caps();
 
             util::wait_for_child(child); // This never returns.
