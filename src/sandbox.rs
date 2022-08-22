@@ -284,7 +284,7 @@ impl Sandbox {
         println!("Disabling setgroups for child");
         let setgroups_mapping_format = format!("/proc/{}/setgroups", pid);
         fs::write(setgroups_mapping_format, "deny\n").map_err(Error::WriteSetGroups)?;
-        
+
         // Set up 1-to-1 mappings for our uid and gid.
         let uid_mapping_format = format!("/proc/{}/uid_map", pid);
         let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
@@ -325,14 +325,13 @@ impl Sandbox {
         Ok(())
     }
 
-    
     pub fn enter_namespace(&mut self) -> Result<(), Error> {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
 
-        println! ("Caps before entering namespace");
+        println!("Caps before entering namespace");
         util::print_caps();
-        
+
         let flags = if uid == 0 {
             libc::CLONE_NEWPID | libc::CLONE_NEWNS | libc::CLONE_NEWNET
         } else {
@@ -344,7 +343,7 @@ impl Sandbox {
 
         // Drop supplemental groups. This is running as root and will
         // support arbitrary uid/gid switching and we don't want to
-        // retain membership of any supplementary groups.
+        // retain membership of any supplementary groups.git 
         //
         // This is not necessarily required for non-root case, where
         // unprivileged user has started us, we will setup one user
@@ -357,42 +356,42 @@ impl Sandbox {
             self.drop_supplemental_groups()?;
         }
 
-        let ret = unsafe { libc::unshare(flags) };
-        if ret != 0 {
-          return Err(Error::Unshare(std::io::Error::last_os_error()));
-        }
-
-        
         let child = util::sfork().map_err(Error::Fork)?;
-        if child == 0 {
-           if uid != 0 {
-               // println!("uid={}, Child is setting up mappings", uid);
-                  //self.setup_id_mappings(uid, gid)?;
-                
-            }
-
-            println!("caps of child");
-            util::print_caps();
-
-           // self.setup_mounts()?;
-            // loop {
-                
-            // }
-            ;
-            Ok(())
-        } else {
-            // This is the parent.
-
-            println!("caps of parent");
-            util::print_caps();
-
-            println!("uid={}, Parent is setting up mappings", uid);
+        if child != 0 {
+            println!("this is SUPER parent");
+            println!("uid={}, SUPER Parent is setting up mappings", uid);
             self.setup_id_mappings_external(uid, gid, child)?;
 
             util::wait_for_child(child); // This never returns.
+        } else {
+            // This is the parent.
+
+            println!("this is child");
+            let ret = unsafe { libc::unshare(flags) };
+            if ret != 0 {
+                return Err(Error::Unshare(std::io::Error::last_os_error()));
+            }
+
+            let child = util::sfork().map_err(Error::Fork)?;
+            if child == 0 {
+                if uid != 0 {
+                    // println!("uid={}, Child is setting up mappings", uid);
+                    //self.setup_id_mappings(uid, gid)?;
+                }
+
+                println!("caps of child");
+                util::print_caps();
+                Ok(())
+            } else {
+                // This is the parent.
+
+                println!("caps of parent");
+                util::print_caps();
+
+                util::wait_for_child(child); // This never returns.
+            }
         }
     }
-
 
     pub fn enter_chroot(&mut self) -> Result<(), Error> {
         let c_proc_self_fd = CString::new("/proc/self/fd").unwrap();
