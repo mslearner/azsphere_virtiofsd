@@ -823,6 +823,7 @@ fn drop_capabilities(inode_file_handles: InodeFileHandlesMode, modcaps: Option<S
         error!("can't set up the child capabilities: {}", e);
         process::exit(1);
     }
+    println!("---Contents of required_caps={:?}", required_caps);
     if let Err(e) = capng::apply(capng::Set::BOTH) {
         error!("can't apply the child capabilities: {}", e);
         process::exit(1);
@@ -840,6 +841,9 @@ fn main() {
         print_capabilities();
         return;
     }
+    //(Sphere)Fix this - this should only be printed in debug mode
+    println!("*caps on entering main");
+    virtiofsd::util::print_caps();
 
     initialize_logging(&opt);
     set_signal_handlers();

@@ -27,6 +27,7 @@ vm-memory = { version = ">=0.7", features = ["backend-mmap", "backend-atomic"] }
 virtio-queue = "0.4"
 vmm-sys-util = "0.10"
 syslog = "6.0"
-
+caps = "0.5.4"
+nix = "0.8.1"
 [profile.release]
 lto = true
