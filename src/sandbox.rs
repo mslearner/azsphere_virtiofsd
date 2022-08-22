@@ -366,6 +366,8 @@ impl Sandbox {
             println!("SUPER Parent is setting up mappings uid={}", uid);
             util::print_caps();
             util::set_caps();
+            println!("Got capabilities={}", uid);
+            util::print_caps();
             self.setup_id_mappings_external(uid, gid, child)?;
             util::drop_all_caps();
             println!("Mappings done, dropping caps for {}", uid);
