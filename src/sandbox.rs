@@ -360,7 +360,9 @@ impl Sandbox {
         let child = util::sfork().map_err(Error::Fork)?;
         if child != 0 {
             println!("this is SUPER parent");
-            sleep(5);
+            unsafe {
+                sleep(5);
+            }
             println!("uid={}, SUPER Parent is setting up mappings", uid);
             self.setup_id_mappings_external(uid, gid, child)?;
 
