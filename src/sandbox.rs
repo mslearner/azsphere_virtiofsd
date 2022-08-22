@@ -363,7 +363,7 @@ impl Sandbox {
             unsafe {
                 sleep(5);
             }
-            println!("SUPER Parent is setting up mappings", uid);
+            println!("SUPER Parent is setting up mappings uid={}", uid);
             util::print_caps();
             util::set_caps();
             self.setup_id_mappings_external(uid, gid, child)?;
