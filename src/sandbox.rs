@@ -6,6 +6,7 @@ use crate::{oslib, util};
 use std::ffi::CString;
 use std::fs::{self, File};
 use std::os::unix::io::{AsRawFd, FromRawFd};
+use std::process;
 use std::str::FromStr;
 use std::{error, fmt, io};
 
@@ -280,6 +281,7 @@ impl Sandbox {
     }
 
     /// Sets 1-to-1 mappings for the current uid and gid.
+    #[allow(dead_code)]
     fn setup_id_mappings(&self, uid: u32, gid: u32) -> Result<(), Error> {
         // To be able to set up the gid mapping, we're required to disable setgroups(2) first.
         fs::write("/proc/self/setgroups", "deny\n").map_err(Error::WriteSetGroups)?;
@@ -292,7 +294,6 @@ impl Sandbox {
         fs::write("/proc/self/gid_map", gid_mapping).map_err(Error::WriteGidMap)?;
         Ok(())
     }
-
     pub fn enter_namespace(&mut self) -> Result<(), Error> {
         let uid = unsafe { libc::geteuid() };
         let gid = unsafe { libc::getegid() };
@@ -321,22 +322,50 @@ impl Sandbox {
             self.drop_supplemental_groups()?;
         }
 
-        let ret = unsafe { libc::unshare(flags) };
-        if ret != 0 {
-            return Err(Error::Unshare(std::io::Error::last_os_error()));
-        }
-
         let child = util::sfork().map_err(Error::Fork)?;
-        if child == 0 {
-            // This is the child.
-            if uid != 0 {
-                self.setup_id_mappings(uid, gid)?;
+        if child != 0 {
+            // This is the parent
+            let ret = unsafe { libc::unshare(flags) };
+            if ret != 0 {
+                return Err(Error::Unshare(std::io::Error::last_os_error()));
             }
-            self.setup_mounts()?;
-            Ok(())
+
+            let child = util::sfork().map_err(Error::Fork)?;
+            if child == 0 {
+                //Second child
+                if uid != 0 {
+                    //Although Sphere will not use this case we should bring this case back
+                    // println!("uid={}, Child is setting up mappings", uid);
+                    //self.setup_id_mappings(uid, gid)?;
+                }
+                self.setup_mounts()?;
+                info!("Dropping caps for child 2 - it does not need any caps");
+                //util::drop_all_caps();
+                Ok(())
+            } else {
+                // This is the parent 2 (child 1)
+                info!(
+                    "Dropping caps for parent - parent does not need any caps {}",
+                    uid
+                );
+                //util::drop_all_caps();
+                util::wait_for_child(child); // This never returns.
+            }
         } else {
-            // This is the parent.
-            util::wait_for_child(child); // This never returns.
+            //First child
+            unsafe {
+                //ToDo::This needs be a signal based synchronization. Will add it.
+                libc::sleep(5);
+            }
+            info!("First child is setting up mappings for the second child ");
+            util::set_caps();
+            util::print_caps();
+            self.setup_id_mappings_external(uid, gid, nix::unistd::getppid())?;
+            info!("Mappings done");
+            info!("dropping caps for child 1");
+            util::drop_all_caps();
+            util::print_caps();
+            process::exit(1);
         }
     }
 
@@ -428,5 +457,30 @@ impl Sandbox {
             SandboxMode::Namespace | SandboxMode::None => None,
             SandboxMode::Chroot => Some(self.shared_dir.clone()),
         }
+    }
+
+    fn setup_id_mappings_external(&self, _uid: u32, _gid: u32, pid: i32) -> Result<(), Error> {
+        // Set up 1-to-1 mappings for our uid and gid.
+        let uid_mapping_format = format!("/proc/{}/uid_map", pid);
+        let uid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+
+        let gid_mapping_format = format!("/proc/{}/gid_map", pid);
+        let gid_mapping = format!("{} {} {}\n", 900, 2000, 200);
+        debug!(
+            "uid_mapping_format={},uid_mapping={}",
+            uid_mapping_format, uid_mapping
+        );
+        debug!(
+            "gid_mapping_format={},gid_mapping={}",
+            gid_mapping_format, gid_mapping
+        );
+        debug!("uid={},gid={}", unsafe { libc::geteuid() }, unsafe {
+            libc::getegid()
+        });
+
+        fs::write(gid_mapping_format, gid_mapping).map_err(Error::WriteGidMap)?;
+        fs::write(uid_mapping_format, uid_mapping).map_err(Error::WriteUidMap)?;
+
+        Ok(())
     }
 }
