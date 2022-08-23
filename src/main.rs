@@ -823,7 +823,7 @@ fn drop_capabilities(inode_file_handles: InodeFileHandlesMode, modcaps: Option<S
         error!("can't set up the child capabilities: {}", e);
         process::exit(1);
     }
-    println!("---Contents of required_caps={:?}", required_caps);
+
     if let Err(e) = capng::apply(capng::Set::BOTH) {
         error!("can't apply the child capabilities: {}", e);
         process::exit(1);

@@ -471,12 +471,12 @@ impl Sandbox {
             }
             info!("First child is setting up mappings for the second child ");
             util::set_caps();
-            util::print_caps();
+            // util::print_caps();
             self.setup_id_mappings_external(uid, gid, nix::unistd::getppid())?;
             info!("Mappings done");
             info!("dropping caps for child 1");
             util::drop_all_caps();
-            util::print_caps();
+            // util::print_caps();
             Ok(())
         }
     }
