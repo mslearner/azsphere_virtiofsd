@@ -610,6 +610,14 @@ struct Opt {
     /// from client and stores it in the newly created file.
     #[structopt(long = "security-label")]
     security_label: bool,
+
+    //Option for adding uid_map
+    #[structopt(short, long)]
+    uid_map: Option<String>,
+
+    //Option for adding gid_map
+    #[structopt(short, long)]
+    gid_map: Option<String>,
 }
 
 fn parse_compat(opt: Opt) -> Opt {
@@ -656,6 +664,8 @@ fn parse_compat(opt: Opt) -> Opt {
             },
             ["source", value] => opt.shared_dir = Some(value.to_string()),
             ["modcaps", value] => opt.modcaps = Some(value.to_string()),
+            ["uid_map", value] => opt.uid_map = Some(value.to_string()),
+            ["gid_map", value] => opt.uid_map = Some(value.to_string()),
             _ => argument_error(tuple),
         }
     }
@@ -840,7 +850,6 @@ fn main() {
         print_capabilities();
         return;
     }
-
     initialize_logging(&opt);
     set_signal_handlers();
 
@@ -872,6 +881,17 @@ fn main() {
         CachePolicy::Never => false,
         _ => !opt.no_readdirplus,
     };
+    let uid_map = opt.uid_map.clone();
+    let gid_map = opt.gid_map.clone();
+
+    println!(
+        "uid_map={}",
+        uid_map.unwrap_or("The value is none".to_string())
+    );
+    println!(
+        "gid_map={}",
+        gid_map.unwrap_or("The value is none".to_string())
+    );
 
     let umask = if opt.socket_group.is_some() {
         libc::S_IROTH | libc::S_IWOTH | libc::S_IXOTH
@@ -941,7 +961,13 @@ fn main() {
         process::exit(1)
     });
 
-    let mut sandbox = Sandbox::new(shared_dir.to_string(), sandbox_mode).unwrap_or_else(|error| {
+    let mut sandbox = Sandbox::new(
+        shared_dir.to_string(),
+        sandbox_mode,
+        opt.uid_map,
+        opt.gid_map,
+    )
+    .unwrap_or_else(|error| {
         error!("Error creating sandbox: {}", error);
         process::exit(1)
     });
