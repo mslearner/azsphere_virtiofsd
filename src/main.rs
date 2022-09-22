@@ -665,7 +665,7 @@ fn parse_compat(opt: Opt) -> Opt {
             ["source", value] => opt.shared_dir = Some(value.to_string()),
             ["modcaps", value] => opt.modcaps = Some(value.to_string()),
             ["uid_map", value] => opt.uid_map = Some(value.to_string()),
-            ["gid_map", value] => opt.uid_map = Some(value.to_string()),
+            ["gid_map", value] => opt.gid_map = Some(value.to_string()),
             _ => argument_error(tuple),
         }
     }
