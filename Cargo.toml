@@ -29,6 +29,6 @@ vmm-sys-util = "0.10"
 syslog = "6.0"
 caps = "0.5.4"
 nix = "0.8.1"
-
+os_pipe = "1.0.1"
 [profile.release]
 lto = true

@@ -5,6 +5,7 @@
 use crate::{oslib, util};
 use std::ffi::CString;
 use std::fs::{self, File};
+use std::io::prelude::*;
 use std::os::unix::io::{AsRawFd, FromRawFd};
 use std::process;
 use std::str::FromStr;
@@ -316,7 +317,7 @@ impl Sandbox {
         if uid == 0 {
             self.drop_supplemental_groups()?;
         }
-
+        let (mut reader, mut writer) = os_pipe::pipe().unwrap();
         let child = util::sfork().map_err(Error::Fork)?;
         if child != 0 {
             // This is the parent
@@ -324,6 +325,9 @@ impl Sandbox {
             if ret != 0 {
                 return Err(Error::Unshare(std::io::Error::last_os_error()));
             }
+            //Tell the child it can go ahead and set mappings
+            writer.write_all(b"x").unwrap();
+            println!("\nparent sent a message to the child");
 
             let child = util::sfork().map_err(Error::Fork)?;
             if child == 0 {
@@ -347,11 +351,13 @@ impl Sandbox {
             }
         } else {
             //First child
-            unsafe {
-                //Wait for parent to enter child namespace
-                libc::sleep(5);
-            }
-            info!("First child is setting up mappings for the second child ");
+            let mut output = [0];
+            reader.read_exact(&mut output).unwrap();
+
+            info!(
+                "Received message= {}, First child is setting up mappings for the second child ",
+                String::from_utf8_lossy(&output)
+            );
             util::set_caps();
             self.setup_id_mappings_external(uid, gid, nix::unistd::getppid())?;
             info!("Mappings done");
